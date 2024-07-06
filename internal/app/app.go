@@ -5,6 +5,7 @@ import (
 
 	"github.com/core-go/health/gin"
 	s "github.com/core-go/health/sql"
+	"github.com/core-go/log/zap"
 	"github.com/core-go/sql"
 
 	"go-service/internal/user"
@@ -15,13 +16,14 @@ type ApplicationContext struct {
 	User   user.UserTransport
 }
 
-func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
-	db, err := sql.OpenByConfig(conf.Sql)
+func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
+	db, err := sql.OpenByConfig(cfg.Sql)
 	if err != nil {
 		return nil, err
 	}
+	logError := log.LogError
 
-	userHandler, err := user.NewUserHandler(db)
+	userHandler, err := user.NewUserHandler(db, logError)
 	if err != nil {
 		return nil, err
 	}

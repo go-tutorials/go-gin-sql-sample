@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +20,12 @@ type UserTransport interface {
 	Delete(*gin.Context)
 }
 
-func NewUserHandler(db *sql.DB) (UserTransport, error) {
+func NewUserHandler(db *sql.DB, logError func(context.Context, string, ...map[string]interface{})) (UserTransport, error) {
 	userRepository, err := adapter.NewUserAdapter(db)
 	if err != nil {
 		return nil, err
 	}
 	userService := service.NewUserService(userRepository)
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, logError)
 	return userHandler, nil
 }
