@@ -15,14 +15,15 @@ import (
 
 type UserHandler struct {
 	service  sv.UserService
+	Validate func(context.Context, interface{}) ([]core.ErrorMessage, error)
 	LogError func(context.Context, string, ...map[string]interface{})
 	jsonMap  map[string]int
 }
 
-func NewUserHandler(service sv.UserService, logError func(context.Context, string, ...map[string]interface{})) *UserHandler {
+func NewUserHandler(service sv.UserService, validate func(context.Context, interface{}) ([]core.ErrorMessage, error), logError func(context.Context, string, ...map[string]interface{})) *UserHandler {
 	userType := reflect.TypeOf(model.User{})
 	_, jsonMap, _ := core.BuildMapField(userType)
-	return &UserHandler{service: service, LogError: logError, jsonMap: jsonMap}
+	return &UserHandler{service: service, Validate: validate, LogError: logError, jsonMap: jsonMap}
 }
 
 func (h *UserHandler) All(c *gin.Context) {
@@ -65,6 +66,17 @@ func (h *UserHandler) Create(c *gin.Context) {
 		return
 	}
 
+	errors, er2 := h.Validate(c.Request.Context(), &user)
+	if er2 != nil {
+		h.LogError(c.Request.Context(), er2.Error(), core.MakeMap(user))
+		c.String(http.StatusInternalServerError, core.InternalServerError)
+		return
+	}
+	if len(errors) > 0 {
+		c.JSON(http.StatusUnprocessableEntity, errors)
+		return
+	}
+
 	res, er2 := h.service.Create(c.Request.Context(), &user)
 	if er2 != nil {
 		h.LogError(c.Request.Context(), er2.Error(), core.MakeMap(user))
@@ -98,6 +110,17 @@ func (h *UserHandler) Update(c *gin.Context) {
 		user.Id = id
 	} else if id != user.Id {
 		c.String(http.StatusBadRequest, "Id not match")
+		return
+	}
+
+	errors, er2 := h.Validate(c.Request.Context(), &user)
+	if er2 != nil {
+		h.LogError(c.Request.Context(), er2.Error(), core.MakeMap(user))
+		c.String(http.StatusInternalServerError, core.InternalServerError)
+		return
+	}
+	if len(errors) > 0 {
+		c.JSON(http.StatusUnprocessableEntity, errors)
 		return
 	}
 
@@ -137,6 +160,19 @@ func (h *UserHandler) Patch(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Id not match")
 		return
 	}
+
+	errors, er2 := h.Validate(c.Request.Context(), &user)
+	if er2 != nil {
+		h.LogError(c.Request.Context(), er2.Error(), core.MakeMap(user))
+		c.String(http.StatusInternalServerError, core.InternalServerError)
+		return
+	}
+	errors = core.RemoveRequiredError(errors)
+	if len(errors) > 0 {
+		c.JSON(http.StatusUnprocessableEntity, errors)
+		return
+	}
+
 	jsonObj, er1 := core.BodyToJsonMap(r, user, body, []string{"id"}, h.jsonMap)
 	if er1 != nil {
 		h.LogError(c.Request.Context(), er1.Error(), core.MakeMap(user))
