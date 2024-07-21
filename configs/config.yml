@@ -1,5 +1,5 @@
 server:
-  name: go-gin-sql-tutorial
+  name: go-sql-gin-sample
   port: 8080
 
 sql:

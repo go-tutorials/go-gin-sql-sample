@@ -1,4 +1,4 @@
-# go-gin-sql-layer-architecture-sample
+# go-sql-gin-sample
 
 #### To run the application
 ```shell
