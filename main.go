@@ -29,7 +29,7 @@ func main() {
 
 	log.Initialize(cfg.Log)
 
-	formatter := gm.NewMaskLogger(cfg.MiddleWare.Request, Mask, Mask)
+	formatter := gm.NewMaskLogger(cfg.MiddleWare.Request, Mask, Mask, cfg.MiddleWare.StringFormat)
 	logger := gm.NewGinLogger(cfg.MiddleWare, log.InfoFields, formatter, MaskLog)
 
 	g.Use(logger.BuildContextWithMask())
