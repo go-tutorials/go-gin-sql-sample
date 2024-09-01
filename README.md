@@ -1,4 +1,4 @@
-# go-sql-gin-sample
+# go-gin-sql-sample
 
 #### To run the application
 ```shell
