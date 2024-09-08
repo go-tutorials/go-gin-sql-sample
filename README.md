@@ -10,7 +10,7 @@ go run main.go
 ![Layer Architecture](https://cdn-images-1.medium.com/max/800/1*JDYTlK00yg0IlUjZ9-sp7Q.png)
 
 ### Layer Architecture with full features
-![Layer Architecture with standard features: config, health check, logging, middleware log tracing](https://cdn-images-1.medium.com/max/800/1*8UjJSv_tW0xBKFXKZu86MA.png)
+![Layer Architecture with standard features: config, health check, logging, middleware log tracing](https://cdn-images-1.medium.com/max/800/1*fJn_7LG9AKw06eeMwwgNlA.png)
 #### [core-go/search](https://github.com/core-go/search)
 - Build the search model at http handler
 - Build dynamic SQL for search
@@ -190,7 +190,7 @@ DELETE /users/wolverine
 - [core-go/health](https://github.com/core-go/health): include HealthHandler, HealthChecker, SqlHealthChecker
 - [core-go/config](https://github.com/core-go/config): to load the config file, and merge with other environments (SIT, UAT, ENV)
 - [core-go/log](https://github.com/core-go/log): logging
-- [core-go/middleware](https://github.com/core-go/log): middleware log tracing
+- [core-go/log/gin](https://github.com/core-go/log): middleware log tracing for [gin](https://github.com/gin-gonic/gin)
 
 ### core-go/health
 To check if the service is available, refer to [core-go/health](https://github.com/core-go/health)
@@ -217,12 +217,6 @@ To create health checker, and health handler
     healthHandler := health.NewHealthHandler(sqlChecker)
 ```
 
-To handler routing
-```go
-    r := mux.NewRouter()
-    r.HandleFunc("/health", healthHandler.Check).Methods("GET")
-```
-
 ### core-go/config
 To load the config from "config.yml", in "configs" folder
 ```go
@@ -230,7 +224,7 @@ package main
 
 import "github.com/core-go/config"
 
-type Root struct {
+type Config struct {
     DB DatabaseConfig `mapstructure:"db"`
 }
 
@@ -240,7 +234,7 @@ type DatabaseConfig struct {
 }
 
 func main() {
-    var cfg Root
+    var cfg Config
     err := config.Load(&cfg, "configs/config")
     if err != nil {
         panic(err)
@@ -248,28 +242,7 @@ func main() {
 }
 ```
 
-### core-go/log *&* core-go/middleware
-```go
-import (
-    "github.com/core-go/config"
-    "github.com/core-go/log"
-    m "github.com/core-go/middleware"
-    "github.com/gorilla/mux"
-)
 
-func main() {
-    var cfg app.Root
-    config.Load(&cfg, "configs/config")
-
-    r := mux.NewRouter()
-
-    log.Initialize(cfg.Log)
-    r.Use(m.BuildContext)
-    logger := m.NewStructuredLogger()
-    r.Use(m.Logger(cfg.MiddleWare, log.InfoFields, logger))
-    r.Use(m.Recover(log.ErrorMsg))
-}
-```
 To configure to ignore the health check, use "skips":
 ```yaml
 middleware:
