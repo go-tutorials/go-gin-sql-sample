@@ -172,21 +172,21 @@ func (h *UserHandler) Patch(c *gin.Context) {
 		return
 	}
 
-	jsonObj, er1 := core.BodyToJsonMap(r, user, body, []string{"id"}, h.jsonMap)
+	jsonUser, er1 := core.BodyToJsonMap(r, user, body, []string{"id"}, h.jsonMap)
 	if er1 != nil {
 		h.LogError(c.Request.Context(), er1.Error(), core.MakeMap(user))
 		c.String(http.StatusInternalServerError, core.InternalServerError)
 		return
 	}
 
-	res, er2 := h.service.Patch(r.Context(), jsonObj)
+	res, er2 := h.service.Patch(r.Context(), jsonUser)
 	if er2 != nil {
-		h.LogError(c.Request.Context(), er2.Error(), core.MakeMap(jsonObj))
+		h.LogError(c.Request.Context(), er2.Error(), core.MakeMap(jsonUser))
 		c.String(http.StatusInternalServerError, core.InternalServerError)
 		return
 	}
 	if res > 0 {
-		c.JSON(http.StatusOK, jsonObj)
+		c.JSON(http.StatusOK, jsonUser)
 	} else if res == 0 {
 		c.JSON(http.StatusNotFound, res)
 	} else {
